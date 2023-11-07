@@ -25,6 +25,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"gitee.com/zhaochuninhefei/gmgo/x509"
+	"github.com/sirupsen/logrus"
 	"net/url"
 	"os"
 	"strconv"
@@ -105,6 +106,7 @@ func LoadPrivateKey(pemBytes []byte) (crypto.PrivateKey, error) {
 		case "RSA PRIVATE KEY":
 			return x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
 		case "PRIVATE KEY":
+			logrus.Error("run sm2==========")
 			return x509.ParsePKCS8PrivateKey(keyBlock.Bytes)
 		}
 	}
