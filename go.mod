@@ -15,6 +15,7 @@ require (
 )
 
 require (
+	gitee.com/zhaochuninhefei/gmgo v0.0.30 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
@@ -26,5 +27,5 @@ require (
 	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/term v0.13.0 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 )
