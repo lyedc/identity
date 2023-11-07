@@ -107,6 +107,7 @@ func LoadPrivateKey(pemBytes []byte) (crypto.PrivateKey, error) {
 			return x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
 		case "PRIVATE KEY":
 			logrus.Error("run sm2==========")
+			fmt.Println("run sm2==========11111111111")
 			return x509.ParsePKCS8PrivateKey(keyBlock.Bytes)
 		}
 	}
