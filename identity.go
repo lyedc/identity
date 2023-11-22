@@ -19,11 +19,10 @@ package identity
 import (
 	"crypto"
 	"crypto/sha1"
-	"crypto/tls"
-	"crypto/x509"
+	"gitee.com/zhaochuninhefei/gmgo/gmtls"
+	"gitee.com/zhaochuninhefei/gmgo/x509"
 	"fmt"
 	"github.com/michaelquigley/pfxlog"
-	"github.com/openziti/foundation/v2/tlz"
 	"github.com/openziti/identity/certtools"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -40,12 +39,12 @@ const (
 )
 
 type Identity interface {
-	Cert() *tls.Certificate
-	ServerCert() []*tls.Certificate
+	Cert() *gmtls.Certificate
+	ServerCert() []*gmtls.Certificate
 	CA() *x509.CertPool
 	CaPool() *CaPool
-	ServerTLSConfig() *tls.Config
-	ClientTLSConfig() *tls.Config
+	ServerTLSConfig() *gmtls.Config
+	ClientTLSConfig() *gmtls.Config
 	Reload() error
 
 	WatchFiles() error
@@ -64,8 +63,8 @@ type ID struct {
 
 	certLock sync.RWMutex
 
-	cert        *tls.Certificate
-	serverCert  []*tls.Certificate
+	cert        *gmtls.Certificate
+	serverCert  []*gmtls.Certificate
 	ca          *x509.CertPool
 	caPool      *CaPool
 	needsReload atomic.Bool
@@ -215,7 +214,7 @@ func (id *ID) getFiles() []string {
 }
 
 // Cert returns the ID's current client certificate that is used by all tls.Config's generated from it.
-func (id *ID) Cert() *tls.Certificate {
+func (id *ID) Cert() *gmtls.Certificate {
 	id.certLock.RLock()
 	defer id.certLock.RUnlock()
 
@@ -223,7 +222,7 @@ func (id *ID) Cert() *tls.Certificate {
 }
 
 // ServerCert returns the ID's current server certificate that is used by all tls.Config's generated from it.
-func (id *ID) ServerCert() []*tls.Certificate {
+func (id *ID) ServerCert() []*gmtls.Certificate {
 	id.certLock.RLock()
 	defer id.certLock.RUnlock()
 
@@ -252,22 +251,25 @@ func (id *ID) CaPool() *CaPool {
 //
 // Generating multiple tls.Config's by calling this method will return tls.Config's that are all tied to this ID's
 // Config.
-func (id *ID) ServerTLSConfig() *tls.Config {
+func (id *ID) ServerTLSConfig() *gmtls.Config {
 	if id.serverCert == nil {
 		return nil
 	}
 
-	tlsConfig := &tls.Config{
+	tlsConfig := &gmtls.Config{
 		GetCertificate: id.GetServerCertificate,
 		RootCAs:        id.ca,
-		ClientAuth:     tls.RequireAnyClientCert,
-		MinVersion:     tlz.GetMinTlsVersion(),
-		CipherSuites:   tlz.GetCipherSuites(),
+		ClientAuth:     gmtls.RequireAnyClientCert,
+		// 设置最小需要的tls的版本，默认的是tls1.2
+		MinVersion:     gmtls.VersionGMSSL,
+		MaxVersion: gmtls.VersionGMSSL,
+		// 获取需要的密码学套件
+		//CipherSuites:   tlz.GetCipherSuites(),
 	}
 
 	//for servers, CAs can be updated for new connections by intercepting
 	//on new client connections via GetConfigForClient
-	tlsConfig.GetConfigForClient = func(info *tls.ClientHelloInfo) (*tls.Config, error) {
+	tlsConfig.GetConfigForClient = func(info *gmtls.ClientHelloInfo) (*gmtls.Config, error) {
 		return id.GetConfigForClient(tlsConfig, info)
 	}
 
@@ -280,20 +282,20 @@ func (id *ID) ServerTLSConfig() *tls.Config {
 //
 // Generating multiple tls.Config's by calling this method will return tls.Config's that are all tied to this ID's
 // Config and client certificates.
-func (id *ID) ClientTLSConfig() *tls.Config {
-	var tlsConfig *tls.Config = nil
+func (id *ID) ClientTLSConfig() *gmtls.Config {
+	var tlsConfig *gmtls.Config = nil
 
 	if id.ca != nil {
-		tlsConfig = &tls.Config{
+		tlsConfig = &gmtls.Config{
 			RootCAs: id.ca,
 		}
 	}
 	if id.cert != nil {
 		if tlsConfig == nil {
-			tlsConfig = &tls.Config{}
+			tlsConfig = &gmtls.Config{}
 		}
 
-		tlsConfig.GetClientCertificate = func(info *tls.CertificateRequestInfo) (*tls.Certificate, error) {
+		tlsConfig.GetClientCertificate = func(info *gmtls.CertificateRequestInfo) (*gmtls.Certificate, error) {
 			return id.GetClientCertificate(tlsConfig, info)
 		}
 	}
@@ -304,7 +306,7 @@ func (id *ID) ClientTLSConfig() *tls.Config {
 // GetServerCertificate is used to satisfy tls.Config's GetCertificate requirements.
 // Allows server certificates to be updated after enrollment extensions without stopping
 // listeners and disconnecting clients. New settings are used for all new incoming connection.
-func (id *ID) GetServerCertificate(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
+func (id *ID) GetServerCertificate(hello *gmtls.ClientHelloInfo) (*gmtls.Certificate, error) {
 	id.certLock.RLock()
 	defer id.certLock.RUnlock()
 
@@ -328,7 +330,7 @@ func (id *ID) GetServerCertificate(hello *tls.ClientHelloInfo) (*tls.Certificate
 // GetClientCertificate is used to satisfy tls.Config's GetClientCertificate requirements.
 // Allows client certificates to be updated after enrollment extensions without disconnecting
 // the current client. New settings will be used on re-connect.
-func (id *ID) GetClientCertificate(config *tls.Config, _ *tls.CertificateRequestInfo) (*tls.Certificate, error) {
+func (id *ID) GetClientCertificate(config *gmtls.Config, _ *gmtls.CertificateRequestInfo) (*gmtls.Certificate, error) {
 	id.certLock.RLock()
 	defer id.certLock.RUnlock()
 
@@ -348,7 +350,7 @@ func (id *ID) GetConfig() *Config {
 
 // GetConfigForClient is used to satisfy tls.Config's GetConfigForClient requirements.
 // Allows servers to have up-to-date CA chains after enrollment extension.
-func (id *ID) GetConfigForClient(config *tls.Config, _ *tls.ClientHelloInfo) (*tls.Config, error) {
+func (id *ID) GetConfigForClient(config *gmtls.Config, _ *gmtls.ClientHelloInfo) (*gmtls.Config, error) {
 	config.RootCAs = id.ca
 	return config, nil
 }
@@ -400,7 +402,7 @@ func LoadIdentity(cfg Config) (Identity, error) {
 			return nil, errors.New("no key specified for identity cert")
 		}
 
-		id.cert = &tls.Certificate{
+		id.cert = &gmtls.Certificate{
 			PrivateKey: defaultKey,
 		}
 

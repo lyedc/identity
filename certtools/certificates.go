@@ -17,7 +17,7 @@
 package certtools
 
 import (
-	"crypto/x509"
+	"gitee.com/zhaochuninhefei/gmgo/x509"
 	"encoding/pem"
 	"fmt"
 	"os"

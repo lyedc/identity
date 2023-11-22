@@ -17,7 +17,7 @@
 package identity
 
 import (
-	"crypto/x509"
+	"gitee.com/zhaochuninhefei/gmgo/x509"
 )
 
 type CaPool struct {

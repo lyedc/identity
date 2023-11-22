@@ -18,8 +18,8 @@ package identity
 
 import (
 	"crypto"
-	"crypto/tls"
-	"crypto/x509"
+	"gitee.com/zhaochuninhefei/gmgo/gmtls"
+	"gitee.com/zhaochuninhefei/gmgo/x509"
 )
 
 // AssembleServerChains takes in an array of certificates, finds all certificates with
@@ -105,14 +105,14 @@ func buildChain(startingLeaf *x509.Certificate, cas []*x509.Certificate) []*x509
 	return chain
 }
 
-// ChainsToTlsCerts converts and array of x509 certificate chains to an array of tls.Certificates (which
+// ChainsTogmtlsCerts converts and array of x509 certificate chains to an array of tls.Certificates (which
 // have their own internal arrays of raw certificates). It is assumed the same private key is used for
 // all chains.
-func ChainsToTlsCerts(chains [][]*x509.Certificate, key crypto.PrivateKey) []*tls.Certificate {
-	tlsCerts := make([]*tls.Certificate, len(chains))
+func ChainsToTlsCerts(chains [][]*x509.Certificate, key crypto.PrivateKey) []*gmtls.Certificate {
+	tlsCerts := make([]*gmtls.Certificate, len(chains))
 
 	for chainIdx, chain := range chains {
-		tlsCerts[chainIdx] = &tls.Certificate{
+		tlsCerts[chainIdx] = &gmtls.Certificate{
 			Certificate: make([][]byte, len(chain)),
 			Leaf:        chain[0],
 			PrivateKey:  key,
