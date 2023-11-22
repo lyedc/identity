@@ -1,7 +1,9 @@
 module github.com/openziti/identity
 
 go 1.19
-
+replace (
+	gitee.com/zhaochuninhefei/gmgo v0.0.30 => github.com/lyedc/gmgo v0.0.1
+)
 require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/michaelquigley/pfxlog v0.6.10
