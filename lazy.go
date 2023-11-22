@@ -1,8 +1,8 @@
 package identity
 
 import (
-	"crypto/tls"
-	"crypto/x509"
+	"gitee.com/zhaochuninhefei/gmgo/gmtls"
+	"gitee.com/zhaochuninhefei/gmgo/x509"
 	"github.com/michaelquigley/pfxlog"
 	"sync"
 )
@@ -27,12 +27,12 @@ func (self *LazyIdentity) load() {
 	})
 }
 
-func (self *LazyIdentity) Cert() *tls.Certificate {
+func (self *LazyIdentity) Cert() *gmtls.Certificate {
 	self.load()
 	return self.Identity.Cert()
 }
 
-func (self *LazyIdentity) ServerCert() []*tls.Certificate {
+func (self *LazyIdentity) ServerCert() []*gmtls.Certificate {
 	self.load()
 	return self.Identity.ServerCert()
 }
@@ -47,12 +47,12 @@ func (self *LazyIdentity) CaPool() *CaPool {
 	return self.Identity.CaPool()
 }
 
-func (self *LazyIdentity) ServerTLSConfig() *tls.Config {
+func (self *LazyIdentity) ServerTLSConfig() *gmtls.Config {
 	self.load()
 	return self.Identity.ServerTLSConfig()
 }
 
-func (self *LazyIdentity) ClientTLSConfig() *tls.Config {
+func (self *LazyIdentity) ClientTLSConfig() *gmtls.Config {
 	self.load()
 	return self.Identity.ClientTLSConfig()
 }

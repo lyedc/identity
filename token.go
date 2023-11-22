@@ -18,8 +18,8 @@ package identity
 
 import (
 	"crypto"
-	"crypto/tls"
-	"crypto/x509"
+	"gitee.com/zhaochuninhefei/gmgo/gmtls"
+	"gitee.com/zhaochuninhefei/gmgo/x509"
 	"sync"
 )
 
@@ -31,14 +31,14 @@ type TokenId struct {
 	Data  map[uint32][]byte
 }
 
-func (i *TokenId) ClientTLSConfig() *tls.Config {
+func (i *TokenId) ClientTLSConfig() *gmtls.Config {
 	if i.Identity != nil {
 		return i.Identity.ClientTLSConfig()
 	}
 	return nil
 }
 
-func (i *TokenId) ServerTLSConfig() *tls.Config {
+func (i *TokenId) ServerTLSConfig() *gmtls.Config {
 	if i.Identity != nil {
 		return i.Identity.ServerTLSConfig()
 	}
@@ -100,7 +100,7 @@ func NewClientTokenIdentityWithPool(clientCerts []*x509.Certificate, privateKey 
 	id := &ID{
 		Config:   Config{},
 		certLock: sync.RWMutex{},
-		cert: &tls.Certificate{
+		cert: &gmtls.Certificate{
 			Leaf:       clientCerts[0],
 			PrivateKey: privateKey,
 		},
